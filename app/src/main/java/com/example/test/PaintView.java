@@ -141,7 +141,6 @@ public class PaintView extends View {
         }
         return true;
     }
-    // todo add clear image
 
     public Bitmap getBitmap(){
         return mBitmap;
