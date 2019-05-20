@@ -1,0 +1,11 @@
+apple
+bench
+campfire
+clock
+elephant
+hammer
+lollipop
+pig
+spoon
+t-shirt
+whale
