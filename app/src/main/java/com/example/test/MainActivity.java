@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
     private PaintView paintView;
     private Button button;
+    private Button clear_button;
 
     private Classifier.Model model = Classifier.Model.FLOAT;
     private Classifier.Device device = Classifier.Device.CPU;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         paintView = (PaintView) findViewById(R.id.paintView);
         button = (Button) findViewById(R.id.classify);
+        clear_button = (Button) findViewById(R.id.clearButton);
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -110,6 +112,13 @@ public class MainActivity extends AppCompatActivity {
                         results.get(0).getTitle(),
                         Toast.LENGTH_SHORT).show();
                         // canvas von ImageView auslesen
+            }
+        });
+
+        clear_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                paintView.clear();
             }
         });
     }
