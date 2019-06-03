@@ -114,7 +114,7 @@ public class ImageUtils {
             for (int i = 0; i < width; i++, yp++) {
                 int y = 0xff & input[yp];
                 if ((i & 1) == 0) {
-                    v = 0xff & input[uvp++];
+                        v = 0xff & input[uvp++];
                     u = 0xff & input[uvp++];
                 }
 

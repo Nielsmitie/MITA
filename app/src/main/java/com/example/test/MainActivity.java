@@ -5,6 +5,7 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -18,6 +19,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private PaintView paintView;
     private Button button;
     private Button clear_button;
+    private ImageView imageView;
 
     private Classifier.Model model = Classifier.Model.FLOAT;
     private Classifier.Device device = Classifier.Device.CPU;
@@ -58,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         paintView = (PaintView) findViewById(R.id.paintView);
         button = (Button) findViewById(R.id.classify);
         clear_button = (Button) findViewById(R.id.clearButton);
+        imageView = (ImageView) findViewById(R.id.preview);
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -71,22 +75,11 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
+
         croppedBitmap =
                 Bitmap.createBitmap(
                         classifier.getImageSizeX(), classifier.getImageSizeY(), Bitmap.Config.ARGB_8888);
-        // todo better way to cut the image instead of cropping it ?!
-        frameToCropTransform =
-                ImageUtils.getTransformationMatrix(
-                        previewWidth,
-                        previewHeight,
-                        classifier.getImageSizeX(),
-                        classifier.getImageSizeY(),
-                        Configuration.ORIENTATION_LANDSCAPE,
-                        MAINTAIN_ASPECT);
 
-        cropToFrameTransform = new Matrix();
-        frameToCropTransform.invert(cropToFrameTransform);
 
         // functionen zum laden des bildes als Canvas und classify nutzen
         // https://github.com/tensorflow/examples/blob/master/lite/examples/image_classification/android/app/src/main/java/org/tensorflow/lite/examples/classification/ClassifierActivity.java
@@ -98,9 +91,26 @@ public class MainActivity extends AppCompatActivity {
                 paintView.getBitmap().getPixels(intArray, 0, previewWidth, 0, 0, previewWidth, previewHeight);
                 // ImageUtils.convertYUV420SPToARGB8888(byteArray, previewWidth, previewHeight, rgbBytes);
 
+                int[] result = calc_dims(intArray, previewWidth, previewHeight);
+
+                frameToCropTransform =
+                        ImageUtils.getTransformationMatrix(
+                                result[1] - result[0],
+                                result[3] - result[2],
+                                classifier.getImageSizeX(),
+                                classifier.getImageSizeY(),
+                                Configuration.ORIENTATION_LANDSCAPE,
+                                MAINTAIN_ASPECT);
+                cropToFrameTransform = new Matrix();
+                frameToCropTransform.invert(cropToFrameTransform);
+                rgbFrameBitmap = Bitmap.createBitmap(result[1] - result[0], result[3] - result[2], Bitmap.Config.ARGB_8888);
+
                 rgbFrameBitmap.setPixels(intArray, 0, previewWidth, 0, 0, previewWidth, previewHeight);
+                rgbFrameBitmap.setPixels(intArray, );
                 final Canvas canvas = new Canvas(croppedBitmap);
                 canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
+
+                imageView.setImageBitmap(croppedBitmap);
 
                 final long startTime = SystemClock.uptimeMillis();
                 final List<Classifier.Recognition> results = classifier.recognizeImage(croppedBitmap);
@@ -144,5 +154,25 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private int[] calc_dims(int[] array, int width, int height){
+        int top = height;
+        int bottom = 0;
+        int left = width;
+        int right = 0;
+
+        for(int i=0; i < width; i++){
+            for(int j=0; j < height; j++){
+                if(Color.WHITE != array[j + i * width]){
+                    if(i > right) right = j;
+                    if(i < left) left = j;
+                    if(j > bottom) bottom = i;
+                    if(j < top) top = j;
+                }
+            }
+        }
+        int[] result = {left, right, top, bottom};
+        return result;
     }
 }
