@@ -92,21 +92,48 @@ public class MainActivity extends AppCompatActivity {
                 // ImageUtils.convertYUV420SPToARGB8888(byteArray, previewWidth, previewHeight, rgbBytes);
 
                 int[] result = calc_dims(intArray, previewWidth, previewHeight);
+                int left = result[0];
+                int right = result[1];
+                int top = result[2];
+                int bottom = result[3];
+
+                int window_width = result[1] - result[0];
+                int window_height = result[3] - result[2];
 
                 frameToCropTransform =
                         ImageUtils.getTransformationMatrix(
-                                result[1] - result[0],
-                                result[3] - result[2],
+                                window_width,
+                                window_height,
                                 classifier.getImageSizeX(),
                                 classifier.getImageSizeY(),
-                                Configuration.ORIENTATION_LANDSCAPE,
-                                MAINTAIN_ASPECT);
+                                Configuration.ORIENTATION_PORTRAIT,
+                                false);
                 cropToFrameTransform = new Matrix();
                 frameToCropTransform.invert(cropToFrameTransform);
                 rgbFrameBitmap = Bitmap.createBitmap(result[1] - result[0], result[3] - result[2], Bitmap.Config.ARGB_8888);
 
-                rgbFrameBitmap.setPixels(intArray, 0, previewWidth, 0, 0, previewWidth, previewHeight);
-                rgbFrameBitmap.setPixels(intArray, );
+                LOGGER.w("orignial size width: %d, height: %d", previewWidth, previewHeight);
+
+                LOGGER.w("Cropped image\nleft: %d, right: %d, top: %d, bottom: %d", result[0], result[1], result[2], result[3]);
+
+                LOGGER.w("window width %d", window_width);
+                LOGGER.w("window height %d", window_height);
+                LOGGER.w("offset %d", top * previewWidth + left);
+                LOGGER.w("stride %d", left + right);
+
+                // rgbFrameBitmap.setPixels(intArray, 0, previewWidth, 0, 0, previewWidth, previewHeight);
+                //rgbFrameBitmap.setPixels(intArray, 0, result[0] + result[1], result[2],
+                //        result[0], result[1] - result[0], result[3] - result[2]);
+                /*
+                rgbFrameBitmap.setPixels(intArray, result[2] * previewWidth + result[0],
+                        result[1] + result[0], 0, 0,
+                        result[1] - result[0], result[3] - result[2]);
+                */
+                int[] window_array = new int[window_height * window_width];
+                paintView.getBitmap().getPixels(window_array, 0, window_width, left,
+                        top, window_width, window_height);
+                rgbFrameBitmap.setPixels(window_array, 0, window_width, 0, 0, window_width, window_height);
+
                 final Canvas canvas = new Canvas(croppedBitmap);
                 canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
 
@@ -116,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
                 final List<Classifier.Recognition> results = classifier.recognizeImage(croppedBitmap);
                 lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
-                LOGGER.v("Detect: %s", results);
+                LOGGER.w("Detect: %s", results);
 
                 Toast.makeText(getApplicationContext(),
                         results.get(0).getTitle(),
@@ -165,9 +192,9 @@ public class MainActivity extends AppCompatActivity {
         for(int i=0; i < width; i++){
             for(int j=0; j < height; j++){
                 if(Color.WHITE != array[j + i * width]){
-                    if(i > right) right = j;
-                    if(i < left) left = j;
-                    if(j > bottom) bottom = i;
+                    if(i > right) right = i;
+                    if(i < left) left = i;
+                    if(j > bottom) bottom = j;
                     if(j < top) top = j;
                 }
             }
