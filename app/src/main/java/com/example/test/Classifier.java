@@ -36,7 +36,7 @@ import org.tensorflow.lite.gpu.GpuDelegate;
 
 /** A classifier specialized to label images using TensorFlow Lite. */
 public abstract class Classifier {
-    private static final Logger LOGGER = new Logger();
+    protected static final Logger LOGGER = new Logger();
 
     /** The model type used for classification. */
     public enum Model {
@@ -190,7 +190,7 @@ public abstract class Classifier {
                         DIM_BATCH_SIZE
                                 * getImageSizeX()
                                 * getImageSizeY()
-                                * DIM_PIXEL_SIZE
+                                //* DIM_PIXEL_SIZE
                                 * getNumBytesPerChannel());
         imgData.order(ByteOrder.nativeOrder());
         LOGGER.d("Created a Tensorflow Lite Image Classifier.");

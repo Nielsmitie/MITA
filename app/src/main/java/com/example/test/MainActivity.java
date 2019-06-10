@@ -1,28 +1,19 @@
 package com.example.test;
 
-import android.app.Activity;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.DisplayMetrics;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -30,45 +21,31 @@ public class MainActivity extends AppCompatActivity {
     private long lastProcessingTimeMs;
     private static final Logger LOGGER = new Logger();
 
-    private PaintView paintView;
+    private DrawingView drawingView;
     private Button button;
     private Button clear_button;
-    private ImageView imageView;
+    private ImageView viewer;
+    private TextView textView;
 
     private Classifier.Model model = Classifier.Model.FLOAT;
     private Classifier.Device device = Classifier.Device.CPU;
     private int numThreads = -1;
     private Classifier classifier;
 
-    private int previewWidth;
-    private int previewHeight;
-    private int[] rgbBytes;
-
     private Bitmap croppedBitmap = null;
-    private Bitmap rgbFrameBitmap = null;
-    private Matrix frameToCropTransform;
-    private Matrix cropToFrameTransform;
 
-    private static final boolean MAINTAIN_ASPECT = true;
-
-    // todo clear image button
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        paintView = (PaintView) findViewById(R.id.paintView);
+        drawingView = findViewById(R.id.drawingView);
         button = (Button) findViewById(R.id.classify);
         clear_button = (Button) findViewById(R.id.clearButton);
-        imageView = (ImageView) findViewById(R.id.preview);
+        viewer = findViewById(R.id.imageView2);
+        textView = findViewById(R.id.texti);
 
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        paintView.init(metrics);
-
-        previewWidth = metrics.widthPixels;
-        previewHeight = metrics.heightPixels;
 
         try {
             classifier = Classifier.create(this, model, device, numThreads);
@@ -80,6 +57,23 @@ public class MainActivity extends AppCompatActivity {
                 Bitmap.createBitmap(
                         classifier.getImageSizeX(), classifier.getImageSizeY(), Bitmap.Config.ARGB_8888);
 
+        textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int[] pm = drawingView.getPixelMap();
+                String out = "";
+
+                for(int i=0; i < 28; i++) {
+                    out += "[";
+                    for (int j = 0; j < 28; j++) {
+                        out += pm[i * 28 + j] + " ";
+                    }
+                    out += "]\n";
+                }
+                textView.setText(out);
+            }
+        });
+
 
         // functionen zum laden des bildes als Canvas und classify nutzen
         // https://github.com/tensorflow/examples/blob/master/lite/examples/image_classification/android/app/src/main/java/org/tensorflow/lite/examples/classification/ClassifierActivity.java
@@ -87,57 +81,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                int[] intArray = new int[previewWidth * previewHeight];
-                paintView.getBitmap().getPixels(intArray, 0, previewWidth, 0, 0, previewWidth, previewHeight);
-                // ImageUtils.convertYUV420SPToARGB8888(byteArray, previewWidth, previewHeight, rgbBytes);
+                croppedBitmap = drawingView.getBitmap();
 
-                int[] result = calc_dims(intArray, previewWidth, previewHeight);
-                int left = result[0];
-                int right = result[1];
-                int top = result[2];
-                int bottom = result[3];
-
-                int window_width = result[1] - result[0];
-                int window_height = result[3] - result[2];
-
-                frameToCropTransform =
-                        ImageUtils.getTransformationMatrix(
-                                window_width,
-                                window_height,
-                                classifier.getImageSizeX(),
-                                classifier.getImageSizeY(),
-                                Configuration.ORIENTATION_PORTRAIT,
-                                false);
-                cropToFrameTransform = new Matrix();
-                frameToCropTransform.invert(cropToFrameTransform);
-                rgbFrameBitmap = Bitmap.createBitmap(result[1] - result[0], result[3] - result[2], Bitmap.Config.ARGB_8888);
-
-                LOGGER.w("orignial size width: %d, height: %d", previewWidth, previewHeight);
-
-                LOGGER.w("Cropped image\nleft: %d, right: %d, top: %d, bottom: %d", result[0], result[1], result[2], result[3]);
-
-                LOGGER.w("window width %d", window_width);
-                LOGGER.w("window height %d", window_height);
-                LOGGER.w("offset %d", top * previewWidth + left);
-                LOGGER.w("stride %d", left + right);
-
-                // rgbFrameBitmap.setPixels(intArray, 0, previewWidth, 0, 0, previewWidth, previewHeight);
-                //rgbFrameBitmap.setPixels(intArray, 0, result[0] + result[1], result[2],
-                //        result[0], result[1] - result[0], result[3] - result[2]);
-                /*
-                rgbFrameBitmap.setPixels(intArray, result[2] * previewWidth + result[0],
-                        result[1] + result[0], 0, 0,
-                        result[1] - result[0], result[3] - result[2]);
-                */
-                int[] window_array = new int[window_height * window_width];
-                paintView.getBitmap().getPixels(window_array, 0, window_width, left,
-                        top, window_width, window_height);
-                rgbFrameBitmap.setPixels(window_array, 0, window_width, 0, 0, window_width, window_height);
-
-                final Canvas canvas = new Canvas(croppedBitmap);
-                canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
-
-                imageView.setImageBitmap(croppedBitmap);
+                viewer.setImageBitmap(croppedBitmap);
 
                 final long startTime = SystemClock.uptimeMillis();
                 final List<Classifier.Recognition> results = classifier.recognizeImage(croppedBitmap);
@@ -155,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         clear_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                paintView.clear();
+                drawingView.reset();
             }
         });
     }

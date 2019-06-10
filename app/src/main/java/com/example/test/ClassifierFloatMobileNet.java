@@ -38,12 +38,12 @@ public class ClassifierFloatMobileNet extends Classifier {
 
     @Override
     public int getImageSizeX() {
-        return 32;
+        return 28;
     }
 
     @Override
     public int getImageSizeY() {
-        return 32;
+        return 28;
     }
 
     @Override
@@ -52,7 +52,9 @@ public class ClassifierFloatMobileNet extends Classifier {
         // see build.gradle for where to obtain this file. It should be auto
         // downloaded into assets.
         // return "mobilenet_v1_1.0_224.tflite";
-        return "mobilenet.tflite";
+        // "g1_quick_draw.tflite"
+        // "mobilenet.tflite"
+        return "g1_quick_draw.tflite";
     }
 
     @Override
@@ -67,9 +69,34 @@ public class ClassifierFloatMobileNet extends Classifier {
 
     @Override
     protected void addPixelValue(int pixelValue) {
-        imgData.putFloat(((pixelValue >> 16) & 0xFF) / 255.f);
-        imgData.putFloat(((pixelValue >> 8) & 0xFF) / 255.f);
-        imgData.putFloat((pixelValue & 0xFF) / 255.f);
+
+        int alpha = (pixelValue >> 24) & 255;
+        int r = (pixelValue >> 16) & 255;
+        int g = (pixelValue >> 8) & 255;
+        int b = pixelValue & 255;
+        int lum = (int)(0.2126*r + 0.7152*g + 0.0722*b);
+        if(pixelValue != 0.0f){
+            LOGGER.w("Pixelvalue, RGB, lum:");
+            LOGGER.w(Integer.toHexString(pixelValue));
+            LOGGER.w(Integer.toString(alpha));
+            //LOGGER.w(Float.toString(r));
+            //LOGGER.w(Float.toString(g));
+            //LOGGER.w(Float.toString(b));
+            //LOGGER.w(Float.toString(lum));
+        }
+
+        /*
+        alpha = (alpha << 24);
+        r = (lum << 16);
+        g = (lum << 8);
+        b = lum;
+        */
+        // int grey = (alpha + r + g + b) / 0xFFFFFFFF;
+
+        LOGGER.w(Float.toString(alpha / 255.f));
+        imgData.putFloat(alpha);
+        //imgData.putFloat(((pixelValue >> 8)) / 255.f);
+        //imgData.putFloat((pixelValue) / 255.f);
     }
 
     @Override
