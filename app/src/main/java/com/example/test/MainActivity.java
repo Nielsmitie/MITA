@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Bitmap croppedBitmap = null;
 
+    private TestNet testNet;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,16 +48,7 @@ public class MainActivity extends AppCompatActivity {
         viewer = findViewById(R.id.imageView2);
         textView = findViewById(R.id.texti);
 
-
-        try {
-            classifier = Classifier.create(this, model, device, numThreads);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        croppedBitmap =
-                Bitmap.createBitmap(
-                        classifier.getImageSizeX(), classifier.getImageSizeY(), Bitmap.Config.ARGB_8888);
+        testNet = new TestNet(this);
 
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,6 +67,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        /*
+
+        try {
+            classifier = Classifier.create(this, model, device, numThreads);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // functionen zum laden des bildes als Canvas und classify nutzen
         // https://github.com/tensorflow/examples/blob/master/lite/examples/image_classification/android/app/src/main/java/org/tensorflow/lite/examples/classification/ClassifierActivity.java
@@ -97,11 +97,31 @@ public class MainActivity extends AppCompatActivity {
                         // canvas von ImageView auslesen
             }
         });
-
+        */
         clear_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 drawingView.reset();
+            }
+        });
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                croppedBitmap = drawingView.getBitmap();
+
+                viewer.setImageBitmap(croppedBitmap);
+
+                final long startTime = SystemClock.uptimeMillis();
+                final List<Classifier.Recognition> results = testNet.recognizeImage(drawingView.getPixelMap());
+                lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+
+                LOGGER.w("Detect: %s", results);
+
+                Toast.makeText(getApplicationContext(),
+                        results.get(0).getTitle(),
+                        Toast.LENGTH_SHORT).show();
+                // canvas von ImageView auslesen
             }
         });
     }

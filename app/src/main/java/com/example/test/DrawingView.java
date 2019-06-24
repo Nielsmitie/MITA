@@ -31,7 +31,8 @@ public class DrawingView extends View {
     }
 
     public Bitmap getBitmap(){
-        return Bitmap.createBitmap(pixelMap, XYSIZE, XYSIZE, Bitmap.Config.ARGB_8888);
+        // return Bitmap.createBitmap(pixelMap, XYSIZE, XYSIZE, Bitmap.Config.ARGB_4444);
+        return canvasBitmap;
     }
 
     private void setupDrawing() {
@@ -43,6 +44,10 @@ public class DrawingView extends View {
         drawPaint.setAntiAlias(true);
         drawPaint.setStyle(Paint.Style.FILL);
         canvasPaint = new Paint(Paint.DITHER_FLAG);
+
+        for(int i=0; i < XYSIZE*XYSIZE; i++){
+            pixelMap[i] = Color.WHITE;
+        }
     }
 
     @Override
@@ -65,7 +70,7 @@ public class DrawingView extends View {
             // todo kein wunder das es nicht geht. Es wird nur der alpha Kanal gesetzt
             // Color.argb((int)(colorStrength * 255), 255, 255, 255);
             // todo noch den Aufdruck wert imitieren
-            pixelMap[y * XYSIZE + x] = Color.argb( 255, 0, 0, 0);
+            pixelMap[y * XYSIZE + x] = (int)(colorStrength * 255);
 
             switch(event.getAction()){
                 case MotionEvent.ACTION_DOWN:
@@ -90,6 +95,9 @@ public class DrawingView extends View {
         onSizeChanged(this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
         invalidate();
         pixelMap = new int[XYSIZE * XYSIZE];
+        for(int i=0; i < XYSIZE*XYSIZE; i++){
+            pixelMap[i] = Color.WHITE;
+        }
     }
 
     @Override

@@ -14,6 +14,8 @@ limitations under the License.
 
 
 import android.app.Activity;
+import android.graphics.Color;
+
 import java.io.IOException;
 
 /** This TensorFlowLite classifier works with the float MobileNet model. */
@@ -70,31 +72,17 @@ public class ClassifierFloatMobileNet extends Classifier {
     @Override
     protected void addPixelValue(int pixelValue) {
 
-        int alpha = (pixelValue >> 24) & 255;
-        int r = (pixelValue >> 16) & 255;
-        int g = (pixelValue >> 8) & 255;
-        int b = pixelValue & 255;
-        int lum = (int)(0.2126*r + 0.7152*g + 0.0722*b);
-        if(pixelValue != 0.0f){
-            LOGGER.w("Pixelvalue, RGB, lum:");
-            LOGGER.w(Integer.toHexString(pixelValue));
-            LOGGER.w(Integer.toString(alpha));
-            //LOGGER.w(Float.toString(r));
-            //LOGGER.w(Float.toString(g));
-            //LOGGER.w(Float.toString(b));
-            //LOGGER.w(Float.toString(lum));
-        }
+        int alpha = Color.alpha(pixelValue);
+        int red = Color.red(pixelValue);
+        int green = Color.green(pixelValue);
+        int blue = Color.blue(pixelValue);
+        // red = green = blue
+        int grey = (int)(0.299 * red + 0.587 * green + 0.114 * blue);
+        LOGGER.w(Float.toString(grey));
 
-        /*
-        alpha = (alpha << 24);
-        r = (lum << 16);
-        g = (lum << 8);
-        b = lum;
-        */
-        // int grey = (alpha + r + g + b) / 0xFFFFFFFF;
+        //int grey = Color.argb(alpha, red, green, blue);
 
-        LOGGER.w(Float.toString(alpha / 255.f));
-        imgData.putFloat(alpha);
+        imgData.putFloat(grey);
         //imgData.putFloat(((pixelValue >> 8)) / 255.f);
         //imgData.putFloat((pixelValue) / 255.f);
     }
