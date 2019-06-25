@@ -2,8 +2,8 @@ package com.example.test;
 
 import android.app.Activity;
 import android.content.res.AssetFileDescriptor;
-import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.RectF;
 import android.os.SystemClock;
 import android.os.Trace;
 
@@ -66,11 +66,8 @@ public class TestNet {
         labelProbArray = new float[1][labels.size()];
     }
 
-    public List<Classifier.Recognition> recognizeImage(final int[] pixel_map) {
+    public List<TestNet.Recognition> recognizeImage(final int[] pixel_map) {
         // Log this method so that it can be analyzed with systrace.
-        Trace.beginSection("recognizeImage");
-
-        Trace.beginSection("preprocessBitmap");
         convertBitmapToByteBuffer(pixel_map);
         Trace.endSection();
 
@@ -83,25 +80,25 @@ public class TestNet {
         LOGGER.v("Timecost to run model inference: " + (endTime - startTime));
 
         // Find the best classifications.
-        PriorityQueue<Classifier.Recognition> pq =
-                new PriorityQueue<Classifier.Recognition>(
+        PriorityQueue<TestNet.Recognition> pq =
+                new PriorityQueue<>(
                         3,
-                        new Comparator<Classifier.Recognition>() {
+                        new Comparator<TestNet.Recognition>() {
                             @Override
-                            public int compare(Classifier.Recognition lhs, Classifier.Recognition rhs) {
+                            public int compare(TestNet.Recognition lhs, TestNet.Recognition rhs) {
                                 // Intentionally reversed to put high confidence at the head of the queue.
                                 return Float.compare(rhs.getConfidence(), lhs.getConfidence());
                             }
                         });
         for (int i = 0; i < labels.size(); ++i) {
             pq.add(
-                    new Classifier.Recognition(
+                    new TestNet.Recognition(
                             "" + i,
                             labels.size() > i ? labels.get(i) : "unknown",
                             labelProbArray[0][i],
                             null));
         }
-        final ArrayList<Classifier.Recognition> recognitions = new ArrayList<Classifier.Recognition>();
+        final ArrayList<TestNet.Recognition> recognitions = new ArrayList<>();
         int recognitionsSize = Math.min(pq.size(), MAX_RESULTS);
         for (int i = 0; i < recognitionsSize; ++i) {
             recognitions.add(pq.poll());
@@ -121,6 +118,7 @@ public class TestNet {
         for (int i = 0; i < imageWidth; ++i) {
             for (int j = 0; j < imageHeight; ++j) {
                 final int val = intValues[pixel++];
+                // todo take the int value and place it as float into the byteBuffer
                 addPixelValue(val);
             }
         }
@@ -129,8 +127,9 @@ public class TestNet {
     }
 
     private void addPixelValue(int pixelValue) {
+        // todo change the what value is actually placed into the buffer object
         /*
-        int alpha = Color.alpha(pixelValue);
+        //int alpha = Color.alpha(pixelValue);
         int red = Color.red(pixelValue);
         int green = Color.green(pixelValue);
         int blue = Color.blue(pixelValue);
@@ -141,8 +140,6 @@ public class TestNet {
         //int grey = Color.argb(alpha, red, green, blue);
         LOGGER.w(Float.toString(pixelValue));
         imgData.putFloat(pixelValue);
-        //imgData.putFloat(((pixelValue >> 8)) / 255.f);
-        //imgData.putFloat((pixelValue) / 255.f);
     }
 
     private MappedByteBuffer loadModelFile(Activity activity) throws IOException {
@@ -164,6 +161,77 @@ public class TestNet {
         }
         reader.close();
         return labels;
+    }
+
+
+    /** An immutable result returned by a Classifier describing what was recognized. */
+    public static class Recognition {
+        /**
+         * A unique identifier for what has been recognized. Specific to the class, not the instance of
+         * the object.
+         */
+        private final String id;
+
+        /** Display name for the recognition. */
+        private final String title;
+
+        /**
+         * A sortable score for how good the recognition is relative to others. Higher should be better.
+         */
+        private final Float confidence;
+
+        /** Optional location within the source image for the location of the recognized object. */
+        private RectF location;
+
+        public Recognition(
+                final String id, final String title, final Float confidence, final RectF location) {
+            this.id = id;
+            this.title = title;
+            this.confidence = confidence;
+            this.location = location;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public Float getConfidence() {
+            return confidence;
+        }
+
+        public RectF getLocation() {
+            return new RectF(location);
+        }
+
+        public void setLocation(RectF location) {
+            this.location = location;
+        }
+
+        @Override
+        public String toString() {
+            String resultString = "";
+            if (id != null) {
+                resultString += "[" + id + "] ";
+            }
+
+            if (title != null) {
+                resultString += title + " ";
+            }
+
+            if (confidence != null) {
+                resultString += String.format("(%.1f%%) ", confidence * 100.0f);
+            }
+
+            if (location != null) {
+                resultString += location + " ";
+            }
+
+            return resultString.trim();
+        }
     }
 
 }

@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.support.v4.graphics.ColorUtils;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -17,6 +18,9 @@ public class DrawingView extends View {
     private Paint drawPaint, canvasPaint;
     private Canvas drawCanvas;
     private Bitmap canvasBitmap;
+
+    // todo change the initial color of the empty pixel map
+    private final int background = 0;
 
 
     public DrawingView(Context context, AttributeSet attrs){
@@ -46,7 +50,7 @@ public class DrawingView extends View {
         canvasPaint = new Paint(Paint.DITHER_FLAG);
 
         for(int i=0; i < XYSIZE*XYSIZE; i++){
-            pixelMap[i] = Color.WHITE;
+            pixelMap[i] = background;
         }
     }
 
@@ -67,9 +71,9 @@ public class DrawingView extends View {
             int x = (int)(x_test / width_scaling);
             int y = (int)(y_test / height_scaling);
 
-            // todo kein wunder das es nicht geht. Es wird nur der alpha Kanal gesetzt
-            // Color.argb((int)(colorStrength * 255), 255, 255, 255);
-            // todo noch den Aufdruck wert imitieren
+            // int tmp = Color.argb((int)(colorStrength * 255), 255, 255, 255);
+            // tmp = ColorUtils.compositeColors(tmp, Color.WHITE);
+            // todo change the value in pixel map for strokes
             pixelMap[y * XYSIZE + x] = (int)(colorStrength * 255);
 
             switch(event.getAction()){
@@ -96,7 +100,7 @@ public class DrawingView extends View {
         invalidate();
         pixelMap = new int[XYSIZE * XYSIZE];
         for(int i=0; i < XYSIZE*XYSIZE; i++){
-            pixelMap[i] = Color.WHITE;
+            pixelMap[i] = background;
         }
     }
 

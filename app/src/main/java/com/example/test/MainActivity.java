@@ -11,11 +11,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity {
     private long lastProcessingTimeMs;
@@ -25,12 +24,6 @@ public class MainActivity extends AppCompatActivity {
     private Button button;
     private Button clear_button;
     private ImageView viewer;
-    private TextView textView;
-
-    private Classifier.Model model = Classifier.Model.FLOAT;
-    private Classifier.Device device = Classifier.Device.CPU;
-    private int numThreads = -1;
-    private Classifier classifier;
 
     private Bitmap croppedBitmap = null;
 
@@ -43,61 +36,12 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         drawingView = findViewById(R.id.drawingView);
-        button = (Button) findViewById(R.id.classify);
-        clear_button = (Button) findViewById(R.id.clearButton);
+        button = findViewById(R.id.classify);
+        clear_button = findViewById(R.id.clearButton);
         viewer = findViewById(R.id.imageView2);
-        textView = findViewById(R.id.texti);
 
         testNet = new TestNet(this);
 
-        textView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int[] pm = drawingView.getPixelMap();
-                String out = "";
-
-                for(int i=0; i < 28; i++) {
-                    out += "[";
-                    for (int j = 0; j < 28; j++) {
-                        out += pm[i * 28 + j] + " ";
-                    }
-                    out += "]\n";
-                }
-                textView.setText(out);
-            }
-        });
-
-        /*
-
-        try {
-            classifier = Classifier.create(this, model, device, numThreads);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // functionen zum laden des bildes als Canvas und classify nutzen
-        // https://github.com/tensorflow/examples/blob/master/lite/examples/image_classification/android/app/src/main/java/org/tensorflow/lite/examples/classification/ClassifierActivity.java
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                croppedBitmap = drawingView.getBitmap();
-
-                viewer.setImageBitmap(croppedBitmap);
-
-                final long startTime = SystemClock.uptimeMillis();
-                final List<Classifier.Recognition> results = classifier.recognizeImage(croppedBitmap);
-                lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-
-                LOGGER.w("Detect: %s", results);
-
-                Toast.makeText(getApplicationContext(),
-                        results.get(0).getTitle(),
-                        Toast.LENGTH_SHORT).show();
-                        // canvas von ImageView auslesen
-            }
-        });
-        */
         clear_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -113,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
                 viewer.setImageBitmap(croppedBitmap);
 
                 final long startTime = SystemClock.uptimeMillis();
-                final List<Classifier.Recognition> results = testNet.recognizeImage(drawingView.getPixelMap());
+                final List<TestNet.Recognition> results = testNet.recognizeImage(drawingView.getPixelMap());
                 lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
                 LOGGER.w("Detect: %s", results);
@@ -121,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(),
                         results.get(0).getTitle(),
                         Toast.LENGTH_SHORT).show();
-                // canvas von ImageView auslesen
             }
         });
     }
