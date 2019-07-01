@@ -23,12 +23,17 @@ public class MainActivity extends AppCompatActivity {
     private DrawingView drawingView;
     private Button button;
     private Button clear_button;
-    private ImageView viewer;
+    private ImageView taskView;
+    private Button start;
 
     private Bitmap croppedBitmap = null;
 
     private TestNet testNet;
 
+    private int label = -1;
+
+    private String[] classes = {"apple", "bench", "campfire", "clock", "elephant", "hammer",
+            "lollipop", "pig", "spoon", "t-shirt", "whale"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
         drawingView = findViewById(R.id.drawingView);
         button = findViewById(R.id.classify);
         clear_button = findViewById(R.id.clearButton);
-        viewer = findViewById(R.id.imageView2);
+        taskView = findViewById(R.id.imageView);
+        start = findViewById(R.id.start_button);
 
         testNet = new TestNet(this);
 
@@ -54,17 +60,26 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 croppedBitmap = drawingView.getBitmap();
 
-                viewer.setImageBitmap(croppedBitmap);
+                // viewer.setImageBitmap(croppedBitmap);
+                if(label != -1) {
+                    final long startTime = SystemClock.uptimeMillis();
+                    final List<TestNet.Recognition> results = testNet.recognizeImage(drawingView.getPixelMap());
+                    lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
-                final long startTime = SystemClock.uptimeMillis();
-                final List<TestNet.Recognition> results = testNet.recognizeImage(drawingView.getPixelMap());
-                lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+                    LOGGER.w("Detect: %s", results);
 
-                LOGGER.w("Detect: %s", results);
+                    for(int i=0; i < results.size(); i++){
+                        if(results.get(i).getId().equals(String.valueOf(label))){
+                            results.get(i).getTitle();
+                            results.get(i).getConfidence();
 
-                Toast.makeText(getApplicationContext(),
-                        results.get(0).getTitle(),
-                        Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    Toast.makeText(getApplicationContext(),
+                            results.get(0).getTitle(),
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

@@ -19,9 +19,9 @@ public class DrawingView extends View {
     private Canvas drawCanvas;
     private Bitmap canvasBitmap;
 
-    // todo change the initial color of the empty pixel map
     private final int background = 0;
 
+    // todo paint border in color and only use not border points for classification
 
     public DrawingView(Context context, AttributeSet attrs){
         super(context, attrs);
