@@ -31,7 +31,7 @@ public class TestNet {
     private int imageHeight = 28;
     private int bytesPerChannel = 4;
 
-    private int MAX_RESULTS = 3;
+    private int MAX_RESULTS = 11;
     private float[][] labelProbArray = null;
 
     private MappedByteBuffer tfliteModel;
@@ -138,7 +138,7 @@ public class TestNet {
         LOGGER.w(Float.toString(grey));
         */
         //int grey = Color.argb(alpha, red, green, blue);
-        LOGGER.w(Float.toString(pixelValue));
+        // LOGGER.w(Float.toString(pixelValue));
         imgData.putFloat(pixelValue);
     }
 

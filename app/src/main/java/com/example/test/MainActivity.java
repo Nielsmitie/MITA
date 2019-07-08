@@ -11,9 +11,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.List;
+import java.util.Random;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -25,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private Button clear_button;
     private ImageView taskView;
     private Button start;
+    private TextView scoreValue;
 
     private Bitmap croppedBitmap = null;
 
@@ -33,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private int label = -1;
 
     private String[] classes = {"apple", "bench", "campfire", "clock", "elephant", "hammer",
-            "lollipop", "pig", "spoon", "t-shirt", "whale"};
+            "lollipop", "pig", "spoon", "tshirt", "whale"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         clear_button = findViewById(R.id.clearButton);
         taskView = findViewById(R.id.imageView);
         start = findViewById(R.id.start_button);
+        scoreValue = findViewById(R.id.ScoreValue);
 
         testNet = new TestNet(this);
 
@@ -54,13 +58,30 @@ public class MainActivity extends AppCompatActivity {
                 drawingView.reset();
             }
         });
+        // LOGGER.w("PACKAGE " + this.getPackageName());
+
+        start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawingView.reset();
+                Random rand = new Random();
+                label = rand.nextInt(11);
+                LOGGER.w("label " + label);
+                //label = 10;
+                String file_path = "@drawable/" + classes[label] + "_1";
+                int image = getResources().getIdentifier(file_path, null, "com.example.test");
+                taskView.setImageResource(image);
+            }
+        });
+
+
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 croppedBitmap = drawingView.getBitmap();
 
-                // viewer.setImageBitmap(croppedBitmap);
+                // taskView.setImageBitmap(croppedBitmap);
                 if(label != -1) {
                     final long startTime = SystemClock.uptimeMillis();
                     final List<TestNet.Recognition> results = testNet.recognizeImage(drawingView.getPixelMap());
@@ -68,18 +89,24 @@ public class MainActivity extends AppCompatActivity {
 
                     LOGGER.w("Detect: %s", results);
 
-                    for(int i=0; i < results.size(); i++){
-                        if(results.get(i).getId().equals(String.valueOf(label))){
-                            results.get(i).getTitle();
-                            results.get(i).getConfidence();
+                    for (int i = 0; i < results.size(); i++) {
+                        LOGGER.w("Detected " + results.get(i).getTitle() + " with " +
+                                results.get(i).getConfidence() + " confidence at pos." + (i + 1));
+                        if (results.get(i).getId().equals(String.valueOf(label))) {
+                            String output = "Detected " + results.get(i).getTitle() + " with " +
+                                    results.get(i).getConfidence() + " confidence at pos." + (i + 1);
 
+                            Toast.makeText(getApplicationContext(),
+                                    output,
+                                    Toast.LENGTH_SHORT).show();
+
+                            scoreValue.setText(String.valueOf((int) ((results.get(i).getConfidence() * 3.414 * 10000) * (classes.length - i))));
+
+                            break;
                         }
                     }
-
-                    Toast.makeText(getApplicationContext(),
-                            results.get(0).getTitle(),
-                            Toast.LENGTH_SHORT).show();
                 }
+                start.setText("Nächstes");
             }
         });
     }
