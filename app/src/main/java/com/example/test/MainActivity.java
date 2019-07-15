@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
 
     private String[] classes = {"apple", "bench", "campfire", "clock", "elephant", "hammer",
             "lollipop", "pig", "spoon", "tshirt", "whale"};
+    private String[] german_class = {"Apfel", "Bank", "Lagerfeuer", "Uhr", "Elefant", "Hammer",
+            "Lollipop", "Schwein", "Löffel", "T-Shirt", "Wal"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +65,9 @@ public class MainActivity extends AppCompatActivity {
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                start.setText("Nächstes");
+                scoreValue.setText("0");
+                start.setBackgroundResource(getResources().getIdentifier("@drawable/btn_default_material", null, "com.example.test"));
                 drawingView.reset();
                 Random rand = new Random();
                 label = rand.nextInt(11);
@@ -90,23 +95,24 @@ public class MainActivity extends AppCompatActivity {
                     LOGGER.w("Detect: %s", results);
 
                     for (int i = 0; i < results.size(); i++) {
-                        LOGGER.w("Detected " + results.get(i).getTitle() + " with " +
+                        LOGGER.w("Bewertung " + results.get(i).getTitle() + " with " +
                                 results.get(i).getConfidence() + " confidence at pos." + (i + 1));
                         if (results.get(i).getId().equals(String.valueOf(label))) {
-                            String output = "Detected " + results.get(i).getTitle() + " with " +
-                                    results.get(i).getConfidence() + " confidence at pos." + (i + 1);
+                            String output = "Bild ist mit " + (i + 1) +
+                                    ". höchster Wahrscheinlichkeit (" +
+                                    (int)(results.get(i).getConfidence() * 100) + "%)" + ": \" " + german_class[label] + "\"";
 
                             Toast.makeText(getApplicationContext(),
                                     output,
-                                    Toast.LENGTH_SHORT).show();
-
-                            scoreValue.setText(String.valueOf((int) ((results.get(i).getConfidence() * 3.414 * 10000) * (classes.length - i))));
+                                    Toast.LENGTH_LONG).show();
+                            double score = (results.get(i).getConfidence() * 3.414 * 1000) * (classes.length - i);
+                            scoreValue.setText(String.valueOf((int) score));
 
                             break;
                         }
                     }
+                    start.setBackgroundResource(getResources().getIdentifier("@drawable/custom_button_red", null, "com.example.test"));
                 }
-                start.setText("Nächstes");
             }
         });
     }

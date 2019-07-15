@@ -28,6 +28,7 @@
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="52dp"
             android:text="Punktzahl"
+            android:textAppearance="@style/TextAppearance.AppCompat.Display1"
             app:layout_constraintBottom_toTopOf="@+id/ScoreValue"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -38,6 +39,7 @@
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="32dp"
             android:text="0"
+            android:textAppearance="@style/TextAppearance.AppCompat.Display1"
             app:layout_constraintBottom_toTopOf="@+id/start_button"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -51,7 +53,7 @@
             app:layout_constraintEnd_toStartOf="@+id/start_button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@mipmap/ic_launcher" />
+            app:srcCompat="@color/white" />
 
         <Button
             android:id="@+id/start_button"
@@ -59,6 +61,7 @@
             android:layout_height="76dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="40dp"
+            android:background="@drawable/custom_button_red"
             android:text="Start"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
